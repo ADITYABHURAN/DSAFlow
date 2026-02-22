@@ -294,4 +294,13 @@ export const DSA_GRAPH: DSANode[] = [
     description: 'KMP, Rabin-Karp, and suffix arrays',
   },
 ]
+
+export const getCategoryColor = (category: string): string => {
+  switch (category) {
+    case 'basics': return '#6EE7B7'
+    case 'algorithms': return '#93C5FD'
+    case 'data-structures': return '#FCA5A5'
+    default: return '#888'
+  }
+}
   

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import {
   View,
   Text,
@@ -8,16 +8,16 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native'
 import { router } from 'expo-router'
-import { supabase } from '@/services/supabase'
 import { useStore } from '@/store/useStore'
 
 const QUESTIONS = [
   { key: 'name', question: "Hey! What should I call you? 👋" },
   { key: 'wakeTime', question: "What time do you usually wake up? (e.g. 7:00 AM)" },
   { key: 'sleepTime', question: "What time do you sleep? (e.g. 11:00 PM)" },
-  { key: 'dsaLevel', question: "How would you rate your DSA level?\n1 = Beginner, 2 = Some basics, 3 = Intermediate, 4 = Advanced" },
+  { key: 'dsaLevel', question: "How would you rate your DSA level?\n1 = Beginner  2 = Some basics  3 = Intermediate  4 = Advanced" },
   { key: 'goal', question: "What's your main goal? (e.g. crack FAANG, learn DSA, prep for interviews)" },
 ]
 
@@ -26,12 +26,13 @@ export default function Onboarding() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([
-    { from: 'bot', text: "Hey! I'm DSAFlow. I'll help you learn DSA without ever feeling like you're studying. Let's get to know each other first 🚀" },
+    { from: 'bot', text: "Hey! I'm DSAFlow. I'll help you learn DSA without ever feeling like you're studying. Let's get to know each other 🚀" },
     { from: 'bot', text: QUESTIONS[0].question },
   ])
   const setPreferences = useStore((s) => s.setPreferences)
+  const scrollRef = useRef<ScrollView>(null)
 
-  const handleSend = async () => {
+  const handleSend = () => {
     if (!input.trim()) return
 
     const currentQ = QUESTIONS[currentQuestion]
@@ -53,10 +54,9 @@ export default function Onboarding() {
         { from: 'bot', text: QUESTIONS[nextQ].question },
       ])
     } else {
-      // All questions answered
       setMessages([
         ...newMessages,
-        { from: 'bot', text: `Perfect ${newAnswers.name}! Your personalized DSA journey starts now. I'll send you bite-sized packets throughout your day 🎯` },
+        { from: 'bot', text: `Perfect ${newAnswers.name}! Your DSA journey starts now. I'll send you bite-sized packets throughout your day 🎯` },
       ])
 
       setPreferences({
@@ -83,7 +83,11 @@ export default function Onboarding() {
           <Text style={styles.subtitle}>Your DSA co-pilot</Text>
         </View>
 
-        <View style={styles.messages}>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.messages}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+        >
           {messages.map((msg, i) => (
             <View
               key={i}
@@ -100,7 +104,7 @@ export default function Onboarding() {
               </Text>
             </View>
           ))}
-        </View>
+        </ScrollView>
 
         <View style={styles.inputRow}>
           <TextInput
@@ -146,13 +150,13 @@ const styles = StyleSheet.create({
   },
   messages: {
     flex: 1,
-    gap: 12,
     paddingBottom: 20,
   },
   bubble: {
     maxWidth: '80%',
     padding: 14,
     borderRadius: 18,
+    marginBottom: 12,
   },
   botBubble: {
     backgroundColor: '#1a1a1a',
