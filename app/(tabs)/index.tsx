@@ -20,8 +20,9 @@ const PACKET_LABELS: Record<string, string> = {
 }
 
 export default function HomeScreen() {
-  const { currentConcept, preferences } = useStore()
+  const { currentConcept, preferences, completedPackets } = useStore()
   const packets = getPacketsForConcept(currentConcept || 'arrays')
+  const completedCount = packets.filter(p => completedPackets.includes(p.id)).length
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,9 +43,9 @@ export default function HomeScreen() {
           <Text style={styles.conceptSub}>5 packets · ~15 mins total</Text>
 
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '0%' }]} />
+            <View style={[styles.progressFill, { width: `${(completedCount / 5) * 100}%` }]} />
           </View>
-          <Text style={styles.progressText}>0 of 5 packets completed</Text>
+          <Text style={styles.progressText}>{completedCount} of 5 packets completed</Text>
         </View>
 
         {/* Packets List */}
