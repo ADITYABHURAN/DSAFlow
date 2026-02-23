@@ -80,25 +80,34 @@ export const useStore = create<AppState>((set, get) => ({
 
   initializeApp: async () => {
     try {
+      console.log('[initializeApp] Starting...')
       set({ isLoading: true })
 
-      // Sign in anonymously if no user
+      // Check existing session first
+      console.log('[initializeApp] Checking for existing user...')
       let user = await getCurrentUser()
+      console.log('[initializeApp] getCurrentUser result:', user?.id ?? 'null')
+
       if (!user) {
+        console.log('[initializeApp] No existing user, signing in anonymously...')
         const data = await signInAnonymously()
         user = data.user
+        console.log('[initializeApp] signInAnonymously result:', user?.id ?? 'null')
       }
 
       set({ user })
 
       if (!user) {
+        console.warn('[initializeApp] Still no user after sign-in, aborting.')
         set({ isLoading: false })
         return
       }
 
       // Load saved profile
+      console.log('[initializeApp] Loading profile for', user.id)
       const profile = await loadUserProfile(user.id)
       if (profile) {
+        console.log('[initializeApp] Profile loaded:', JSON.stringify(profile))
         set({
           preferences: {
             wakeTime: profile.wake_time,
@@ -107,9 +116,12 @@ export const useStore = create<AppState>((set, get) => ({
             onboardingComplete: profile.onboarding_complete,
           }
         })
+      } else {
+        console.log('[initializeApp] No profile found (new user)')
       }
 
       // Load saved progress
+      console.log('[initializeApp] Loading progress...')
       const progress = await loadUserProgress(user.id)
       if (progress && progress.length > 0) {
         const completedConcepts = progress
@@ -117,11 +129,15 @@ export const useStore = create<AppState>((set, get) => ({
           .map((p: any) => p.concept_id)
 
         const nextConcept = getNextConcept(completedConcepts)
+        console.log('[initializeApp] Progress loaded:', completedConcepts.length, 'concepts completed')
         set({ completedConcepts, currentConcept: nextConcept })
+      } else {
+        console.log('[initializeApp] No progress found (fresh start)')
       }
 
+      console.log('[initializeApp] Done.')
     } catch (error) {
-      console.log('Init error:', error)
+      console.error('[initializeApp] Error:', error)
     } finally {
       set({ isLoading: false })
     }
