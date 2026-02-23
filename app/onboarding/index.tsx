@@ -12,6 +12,7 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { useStore } from '@/store/useStore'
+import { schedulePacketNotifications } from '@/services/notifications'
 
 const QUESTIONS = [
   { key: 'name', question: "Hey! What should I call you? 👋" },
@@ -60,15 +61,17 @@ export default function Onboarding() {
       ])
 
       setPreferences({
-        wakeTime: newAnswers.wakeTime,
-        sleepTime: newAnswers.sleepTime,
-        dsaLevel: newAnswers.dsaLevel,
-        onboardingComplete: true,
-      })
+  wakeTime: newAnswers.wakeTime,
+  sleepTime: newAnswers.sleepTime,
+  dsaLevel: newAnswers.dsaLevel,
+  onboardingComplete: true,
+})
 
-      setTimeout(() => {
-        router.replace('/(tabs)')
-      }, 2000)
+schedulePacketNotifications(newAnswers.wakeTime, newAnswers.sleepTime)
+
+setTimeout(() => {
+  router.replace('/(tabs)')
+}, 2000)
     }
   }
 

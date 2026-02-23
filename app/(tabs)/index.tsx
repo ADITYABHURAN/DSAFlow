@@ -1,4 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native'
+import { useEffect } from 'react'
 import { router } from 'expo-router'
 import { useStore } from '@/store/useStore'
 import { getPacketsForConcept } from '@/data/packets'
@@ -20,21 +21,35 @@ const PACKET_LABELS: Record<string, string> = {
 }
 
 export default function HomeScreen() {
-  const { currentConcept, preferences, completedPackets } = useStore()
+  const { currentConcept, preferences, completedPackets, isLoading } = useStore()
   const packets = getPacketsForConcept(currentConcept || 'arrays')
   const completedCount = packets.filter(p => completedPackets.includes(p.id)).length
+
+  useEffect(() => {
+    if (!isLoading && preferences && !preferences.onboardingComplete) {
+      router.replace('/onboarding')
+    }
+  }, [isLoading, preferences])
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ color: '#6EE7B7', fontSize: 18 }}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.greeting}>Good morning 👋</Text>
           <Text style={styles.tagline}>Your DSA packets are ready</Text>
         </View>
 
-        {/* Today's Concept Card */}
         <View style={styles.conceptCard}>
           <Text style={styles.conceptLabel}>TODAY'S CONCEPT</Text>
           <Text style={styles.conceptName}>
@@ -48,10 +63,9 @@ export default function HomeScreen() {
           <Text style={styles.progressText}>{completedCount} of 5 packets completed</Text>
         </View>
 
-        {/* Packets List */}
         <Text style={styles.sectionTitle}>Today's Packets</Text>
 
-        {packets.map((packet, index) => (
+        {packets.map((packet) => (
           <TouchableOpacity
             key={packet.id}
             style={styles.packetRow}
@@ -68,18 +82,19 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statNumber}>0</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{useStore.getState().completedConcepts.length}</Text>
             <Text style={styles.statLabel}>Concepts Done</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0%</Text>
+            <Text style={styles.statNumber}>
+              {Math.round((useStore.getState().completedConcepts.length / 35) * 100)}%
+            </Text>
             <Text style={styles.statLabel}>Interview Ready</Text>
           </View>
         </View>
